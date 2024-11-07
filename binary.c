@@ -1,221 +1,148 @@
 #include <stdio.h>
 #include <stdlib.h>
-struct btnode
-{
-int value;
-struct btnode *l;
-struct btnode *r;
-} *root = NULL, *temp = NULL, *t2, *t1, *tl;
-void delete1();
-void insert();
-void delete();
-void inorder(struct btnode *t);
-void create();
-void search(struct btnode *t);
-void search1(struct btnode *t, int data);
-void deletel(struct btnode *t);
-int smallest(struct btnode *t);
 
-int main()
-{
-int ch;
-printf("\n----BST OPERATIONS ---");
-printf("\n1 - Insert an element into tree\n");
-printf("2 - Delete an element from the tree\n");
-printf("3 - Inorder Traversal\n");
-printf("4 - Exit\n");
+struct node {
+  int data; //node will store some data
+  struct node *right_child; // right child
+  struct node *left_child; // left child
+};
 
-while (1)
-{
-printf("\nEnter your choice: ");
-scanf("%d", &ch);
-switch (ch)
-{
-case 1:
-insert();
-break;
-case 2:
-delete1();
-break;
-case 3:
-inorder(root);
-break;
-case 4:
-exit(0);
-default:
-printf("Wrong choice, Please enter correct choice ");
-}
+//function to create a node
+struct node* new_node(int x) {
+  struct node *temp;
+  temp = malloc(sizeof(struct node));
+  temp -> data = x;
+  temp -> left_child = NULL;
+  temp -> right_child = NULL;
+  return temp;
 }
 
-return 0;
+// searching operation
+struct node* search(struct node * root, int x) {
+  if (root == NULL || root -> data == x) //if root->data is x then the element is found
+    return root;
+  else if (x > root -> data) // x is greater, so we will search the right subtree
+    return search(root -> right_child, x);
+  else //x is smaller than the data, so we will search the left subtree
+    return search(root -> left_child, x);
 }
 
-void insert()
-{
-create();
-if (root == NULL)
-root = temp;
-else
-search(root);
-
-}
-void create()
-{
-int data;
-printf("Enter data of node to be inserted : ");
-scanf("%d", &data);
-temp = (struct btnode *)malloc(1 * sizeof(struct btnode));
-temp->value = data;
-temp->l = temp->r = NULL;
-}
-void search(struct btnode *t)
-{
-if (t == NULL)
-{
-return;
-}
-if ((temp->value > t->value) && (t->r != NULL))
-search(t->r);
-else if ((temp->value > t->value) && (t->r == NULL))
-t->r = temp;
-else if ((temp->value < t->value) && (t->l != NULL))
-search(t->l);
-else if ((temp->value < t->value) && (t->l == NULL))
-t->l = temp;
+// insertion
+struct node* insert(struct node * root, int x) {
+  if (root == NULL)
+    return new_node(x);
+  else if (x > root -> data) // x is greater. Should be inserted to the right
+    root -> right_child = insert(root -> right_child, x);
+  else // x is smaller and should be inserted to left
+    root -> left_child = insert(root -> left_child, x);
+  return root;
 }
 
-void inorder(struct btnode *t)
-{
-if (root == NULL)
-{
-printf("No elements in a tree to display");
-return;
+//function to find the minimum value in a node
+struct node* find_minimum(struct node * root) {
+  if (root == NULL)
+    return NULL;
+  else if (root -> left_child != NULL) // node with minimum value will have no left child
+    return find_minimum(root -> left_child); // left most element will be minimum
+  return root;
 }
 
-if (t->l != NULL)
-inorder(t->l);
-
-printf("%d -> ", t->value);
-
-if (t->r != NULL)
-inorder(t->r);
-
+// deletion
+struct node* delete(struct node * root, int x) {
+  if (root == NULL)
+    return NULL;
+  if (x > root -> data)
+    root -> right_child = delete(root -> right_child, x);
+  else if (x < root -> data)
+    root -> left_child = delete(root -> left_child, x);
+  else {
+    //No Child node
+    if (root -> left_child == NULL && root -> right_child == NULL) {
+      free(root);
+      return NULL;
+    }
+    //One Child node
+    else if (root -> left_child == NULL || root -> right_child == NULL) {
+      struct node *temp;
+      if (root -> left_child == NULL)
+        temp = root -> right_child;
+      else
+        temp = root -> left_child;
+      free(root);
+      return temp;
+    }
+    //Two Children
+    else {
+      struct node *temp = find_minimum(root -> right_child);
+      root -> data = temp -> data;
+      root -> right_child = delete(root -> right_child, temp -> data);
+    }
+  }
+  return root;
 }
 
-void delete1()
-{
-int data;
-
-if (root == NULL)
-{
-printf("No elements in the tree to delete");
-return;
+// Inorder Traversal
+void inorder(struct node *root) {
+  if (root != NULL) {
+    inorder(root -> left_child);
+    printf(" %d ", root -> data);
+    inorder(root -> right_child);
+  }
 }
 
-printf("Enter the data to be deleted: ");
-scanf("%d", &data);
-t1 = NULL;
-search1(root, data);
-if (t1 == NULL)
-{
-printf("Element not found in the tree");
-}
-else
-{
-deletel(t1);
-}
+int main() {
+  struct node *root = NULL;
+  int choice, value;
+
+  while (1) {
+    printf("\nMenu:\n");
+    printf("1. Insert\n");
+    printf("2. Search\n");
+    printf("3. Delete\n");
+    printf("4. Inorder Traversal\n");
+    printf("5. Exit\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+      case 1:
+        printf("Enter value to insert: ");
+        scanf("%d", &value);
+        root = insert(root, value);
+        printf("%d inserted.\n", value);
+        break;
+
+      case 2:
+        printf("Enter value to search: ");
+        scanf("%d", &value);
+        if (search(root, value) != NULL)
+          printf("%d found in the tree.\n", value);
+        else
+          printf("%d not found in the tree.\n", value);
+        break;
+
+      case 3:
+        printf("Enter value to delete: ");
+        scanf("%d", &value);
+        root = delete(root, value);
+        printf("%d deleted.\n", value);
+        break;
+
+      case 4:
+        printf("Inorder traversal: ");
+        inorder(root);
+        printf("\n");
+        break;
+
+      case 5:
+        printf("Exiting program.\n");
+        exit(0);
+
+      default:
+        printf("Invalid choice! Please try again.\n");
+    }
+  }
+  return 0;
 }
 
-void search1(struct btnode *t, int data)
-{
-if (t == NULL)
-{
-return;
-}
-if (data > t->value)
-{
-tl = t;
-search1(t->r, data);
-}
-else if (data < t->value)
-{
-tl = t;
-search1(t->l, data);
-}
-else if (data == t->value)
-{
-t1 = t;
-}
-else
-{
-t1 = NULL;
-}
-}
 
-void deletel(struct btnode *t)
-{
-int k;
-if (t->l == NULL && t->r == NULL)
-{
-if (tl->l == t)
-{
-tl->l = NULL;
-}
-else
-{
-tl->r = NULL;
-}
-free(t);
-return;
-}
-else if (t->r == NULL)
-{
-if (t1 == t)
-{
-root = t->l;
-tl = root;
-}
-else if (tl->l == t)
-{
-tl->l = t->l;
-}
-else
-{
-tl->r = t->l;
-}
-free(t);
-return;
-}
-else if (t->l == NULL)
-{
-if (t1 == t)
-{
-root = t->r;
-tl = root;
-}
-else if (tl->r == t)
-{
-tl->r = t->r;
-}
-else
-{
-tl->l = t->r;
-}
-free(t);
-return;
-}
-else if (t->l != NULL && t->r != NULL)
-{
-k = smallest(t->r);
-deletel(t->r);
-t->value = k;
-}
-}
-
-int smallest(struct btnode *t)
-{
-if (t->l != NULL)
-return (smallest(t->l));
-else
-return (t->value);
-}
