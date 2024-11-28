@@ -89,7 +89,7 @@ item=start->val;
 ptr=start;
 start=start->next;
 free(ptr);
-printf("item popped:");
+printf("item popped:%d",item);
 }
 }
 void display()
